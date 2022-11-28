@@ -1,0 +1,124 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#     https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#     https://docs.fastlane.tools/plugins/available-plugins
+#
+# Updating Faslane must come first, because after update it looses the session
+update_fastlane
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Deploy for internal testing via TestFlight"
+	  lane :internal_testing do
+			deploy_via_testflight_to(
+				group: "Timero team",
+				environment: "staging"
+			)
+	  end
+
+	desc "Deploy for external testing via TestFlight"
+	  lane :external_testing do
+			deploy_via_testflight_to(
+				group: "External testers",
+				environment: "production"
+			)
+	  end
+
+	lane :deploy_via_testflight_to do |options|
+    safety_checks
+
+    group = options[:group]
+    if group == "External testers"
+      changelog = "Bug fixes & performance improvements"
+    else
+      changelog = prompt(text: "Changelog: ")
+		end
+
+		increment_version
+
+		login_as_developer
+
+		environment = options[:environment]
+		build_ios_app_as_ipa(environment: environment)
+
+		distribute_external = group == "External testers"
+    upload_to_testflight(
+      changelog: changelog,
+      distribute_external: distribute_external,
+      groups: group,
+			expire_previous_builds: true,
+    )
+    commit_version_change
+  end
+
+	lane :safety_checks do
+    ensure_git_status_clean
+
+    # Running Flutter tests
+    # sh "cd ../../ && flutter test"
+  end
+
+	lane :login_as_developer do
+    get_certificates
+    get_provisioning_profile
+  end
+
+	lane :increment_version do
+    build_number = current_build_number + 1
+    set_build_number value: build_number
+    set_version_number value: build_number
+  end
+
+	lane :current_build_number do
+    # Keep iOS and Android build numbers in sync
+		[latest_testflight_build_number, android_version_from_gradle - 1].max
+	end
+
+  lane :android_version_from_gradle do
+    path = '../../android/app/build.gradle'
+    re = /versionCode\s+(\d+)/ 
+    s = File.read(path)
+    s[re, 1].to_i
+  end
+
+  lane :set_build_number do |options|
+    build_number = options[:value]
+    increment_build_number(
+      build_number: build_number,
+    )
+  end
+
+  # Setting version number too, because analytics is based on it
+  lane :set_version_number do |options|
+    build_number = options[:value]
+    version_number = "1.0.#{build_number}"
+    increment_version_number(
+      version_number: version_number
+    )
+  end
+
+	lane :build_ios_app_as_ipa do |options|
+    environment = options[:environment]
+    # Obfuscating code. We have to build the app twice, because build_app doesn't accept Flutter params, only iOS params.
+    sh "flutter build ios --release --no-codesign --obfuscate --split-debug-info=ios/build/symbols"
+    build_app(
+      scheme: "Runner",
+    )
+  end
+
+	lane :commit_version_change do
+    commit_version_bump(
+      force: true,
+      xcodeproj: "../ios/Runner.xcodeproj",
+    )
+    add_git_tag
+    push_to_git_remote
+  end
+end
