@@ -1,0 +1,18 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Timero",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "debug",
+            "program": "lib/main.dart"
+        },
+        {
+            "name": "Tests",
+            "type": "dart",
+            "request": "launch",
+            "program": "./test/"
+        },
+    ]
+}
