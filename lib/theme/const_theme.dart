@@ -69,7 +69,7 @@ abstract class ThemeButtons {
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(20),
     ),
-    backgroundColor: Colors.grey[350],
+    backgroundColor: Color.fromRGBO(246, 246, 246, 1),
   );
 }
 

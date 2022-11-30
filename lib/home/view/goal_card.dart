@@ -271,7 +271,7 @@ String _textForDetails(List<DateTime> resets, int index) {
   if (index == 0) {
     text = 'Last reset: ';
   } else {
-    text = 'Reset ${resets.length - index} : ';
+    text = 'Reset ${resets.length - index}: ';
   }
   text += _parseDate(resets[index]);
   return text;
@@ -304,7 +304,7 @@ Widget _goalDetails(Goal goal, Size size) {
                 ),
               ),
               Text(
-                '${goal.goalDays} days',
+                '${goal.goalDays} ${goal.goalDays > 1 ? 'days' : 'day'}',
                 style: const TextStyle(
                   fontSize: 12,
                   color: Color.fromRGBO(58, 58, 58, 1),

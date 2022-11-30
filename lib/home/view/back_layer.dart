@@ -41,6 +41,7 @@ class _BackLayerState extends State<BackLayer> {
                 ),
                 RawMaterialButton(
                   onPressed: () {
+                    isDetailsOpen = false;
                     if (widget.goal.goalDays == 0) {
                       setCardState(FrontLayerState.isAddDaysMenuOpen);
                     } else {
